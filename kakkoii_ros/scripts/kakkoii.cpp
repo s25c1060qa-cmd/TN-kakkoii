@@ -115,6 +115,11 @@ public:
     return received_x_;
   }
 
+  double get_received_y() const
+  {
+    return received_y_;
+  }
+
   // 次の入力を待つためにフラグをリセットする関数
   void reset_command()
   {
@@ -125,6 +130,7 @@ private:
   void command_callback(const geometry_msgs::msg::Point::SharedPtr msg)
   {
     received_x_ = msg->x;
+    received_y_ = msg->y;
     command_received_ = true;
     RCLCPP_INFO(node_->get_logger(), "Received target_point -> x: %.4f, y: %.4f, z: %.4f", msg->x, msg->y, msg->z);
   }
@@ -135,6 +141,7 @@ private:
   rclcpp::Subscription<geometry_msgs::msg::Point>::SharedPtr subscription_;
   
   std::atomic<double> received_x_;
+  std::atomic<double> received_y_;
   std::atomic<bool> command_received_;
 };
 
@@ -154,7 +161,7 @@ int main(int argc, char ** argv)
   const double LIFTING_HEIGHT = 0.3;
 
   // 掴む位置（ピック位置）のXYZ[m]とRPY[deg]
-  const double PICK_X = 0.2;
+  const double PICK_X = 0.25;
   const double PICK_Y = 0.0;
   const double PICK_Z = 0.12;
   const double PICK_ROLL = -180.0;
@@ -184,18 +191,38 @@ int main(int argc, char ** argv)
 
     // 3. 受け取ったx軸の値を判定
     double x_value = controller.get_received_x();
-    double place_y = 0.2; // デフォルト
+    double place_y = 0.0; // デフォルト
+    double y_value = controller.get_received_y();
+    double place_x = 0.25;
 
-    if (x_value < 0.5) {
-      RCLCPP_INFO(node->get_logger(), "X value (%.4f) < 0.5 -> Executing: Move block to RIGHT.", x_value);
-      place_y = -0.2; // 右側に置く（Yをマイナス方向へ）
-    } else {
-      RCLCPP_INFO(node->get_logger(), "X value (%.4f) >= 0.5 -> Executing: Move block to LEFT.", x_value);
-      place_y = 0.2;  // 左側に置く（Yをプラス方向へ）
+    if (x_value < 0.33 && 0.66 < y_value) {
+      place_x = 0.40;
+      place_y = -0.15; //左下を検知し、右上に移動
+    } else if(x_value < 0.33 && (0.33 < y_value && y_value  < 0.66)) {
+      place_x = 0.25;
+      place_y = -0.15; //左真ん中を検知し、右に移動
+    } else if(x_value < 0.33 && y_value < 0.33) {
+      place_x = 0.10;
+      place_y = -0.15; //左上を検知し、右上に移動
+    } else if((0.33 < x_value && x_value <0.66) && 0.5 < y_value ) {
+      place_x = 0.40;
+      place_y = 0.00; //下を検知し、上に移動
+    } else if((0.33 < x_value && x_value <0.66) && y_value < 0.5) {
+      place_x = 0.10;
+      place_y = 0.00; //上を検知し、下に移動
+    } else if(0.66 < x_value && 0.66 < y_value) {
+      place_x = 0.40;
+      place_y = 0.15; //右下を検知し、左上に移動
+    } else if(0.66 < x_value && (0.33 < y_value && y_value < 0.66)) {
+      place_x = 0.25;
+      place_y = 0.15; //右真ん中を検知し、左に移動
+    } else if(0.66 < x_value && y_value < 0.33) {
+      place_x = 0.10;
+      place_y = 0.15; //右上を検知し、左上に移動
     }
 
     // プレース位置の設定
-    const double PLACE_X = 0.2;
+    const double PLACE_X = place_x;
     const double PLACE_Y = place_y;
     const double PLACE_Z = 0.13;
     const double PLACE_ROLL = -180.0;
