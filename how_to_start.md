@@ -1,25 +1,30 @@
 # how to start(班員用)
 ## 1.リポリトジのクローン
-```cd ~/ros2_ws/src  
+```
+cd ~/ros2_ws/src  
 git clone git@github.com:s25c1060qa-cmd/TN-kakkoii.git  
 ```
 ## 2.ビルド
-```cd ~/ros2_ws  
+```
+cd ~/ros2_ws  
 colcon build --packages-select kakkoii_ros  
 source ~/ros2_ws/install/setup.bash  
 ```
 ## 3.シミュレーション内での実行
 - ターミナル1(gazebo起動)  
-```source ~/ros2_ws/install/setup.bash  
+```
+source ~/ros2_ws/install/setup.bash  
 ros2 launch crane_x7_gazebo crane_x7_with_table.launch.py
 ```
  
 - ターミナル2(mediapipe)
-```source env/bin/activate
+```
+source env/bin/activate
 python3 ~/ros2_ws/src/TN-kakkoii/media_publisher.py
 ```
 
 - ターミナル3(アームのコントロール)
-```source ~/ros2_ws/install/setup.bash
+```
+source ~/ros2_ws/install/setup.bash
 ros2 launch kakkoii_ros kakkoii.launch.py use_sim_time:='true'
 ```
