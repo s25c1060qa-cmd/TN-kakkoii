@@ -15,4 +15,3 @@ python3 ~/ros2_ws/src/TN-kakkoii/media_publisher.py
 ターミナル3(アームのコントロール)
 source ~/ros2_ws/install/setup.bash
 ros2 launch kakkoii_ros kakkoii.launch.py use_sim_time:='true'
-
