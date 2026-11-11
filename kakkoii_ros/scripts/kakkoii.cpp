@@ -196,29 +196,29 @@ int main(int argc, char ** argv)
     double place_x = 0.25;
 
     if (x_value < 0.33 && 0.66 < y_value) {
-      place_x = 0.40;
-      place_y = -0.15; //左下を検知し、右上に移動
+      place_x = 0.35;
+      place_y = -0.13; //左下を検知し、右上に移動
     } else if(x_value < 0.33 && (0.33 < y_value && y_value  < 0.66)) {
       place_x = 0.25;
       place_y = -0.15; //左真ん中を検知し、右に移動
     } else if(x_value < 0.33 && y_value < 0.33) {
-      place_x = 0.10;
-      place_y = -0.15; //左上を検知し、右上に移動
+      place_x = 0.15;
+      place_y = -0.13; //左上を検知し、右上に移動
     } else if((0.33 < x_value && x_value <0.66) && 0.5 < y_value ) {
-      place_x = 0.40;
+      place_x = 0.35;
       place_y = 0.00; //下を検知し、上に移動
     } else if((0.33 < x_value && x_value <0.66) && y_value < 0.5) {
-      place_x = 0.10;
+      place_x = 0.15;
       place_y = 0.00; //上を検知し、下に移動
     } else if(0.66 < x_value && 0.66 < y_value) {
-      place_x = 0.40;
-      place_y = 0.15; //右下を検知し、左上に移動
+      place_x = 0.35;
+      place_y = 0.13; //右下を検知し、左上に移動
     } else if(0.66 < x_value && (0.33 < y_value && y_value < 0.66)) {
       place_x = 0.25;
-      place_y = 0.15; //右真ん中を検知し、左に移動
+      place_y = 0.13; //右真ん中を検知し、左に移動
     } else if(0.66 < x_value && y_value < 0.33) {
-      place_x = 0.10;
-      place_y = 0.15; //右上を検知し、左上に移動
+      place_x = 0.15;
+      place_y = 0.13; //右上を検知し、左上に移動
     }
 
     // プレース位置の設定
