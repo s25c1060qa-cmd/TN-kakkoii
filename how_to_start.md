@@ -10,7 +10,7 @@ cd ~/ros2_ws
 colcon build --packages-select kakkoii_ros  
 source ~/ros2_ws/install/setup.bash  
 ```
-## 3.シミュレーション内での実行
+## 3.シミュレーション内での実行(gazabo)
 - ターミナル1(gazebo起動)  
 ```
 source ~/ros2_ws/install/setup.bash  
