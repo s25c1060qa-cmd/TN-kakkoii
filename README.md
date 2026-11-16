@@ -109,6 +109,21 @@ sudo apt install -y python3-pil fonts-noto-cjk
 pip install "mediapipe<0.10.30" "numpy<2" "opencv-contrib-python<4.11" --break-system-packages
 ```
 
+### 4. ビルドと画像処理プログラムの起動
+
+必要なライブラリのインストール後、ワークスペースのルート（`~/ros2_ws`）に移動して画像処理パッケージをビルドします。
+
+```bash
+cd ~/ros2_ws
+colcon build --packages-select kakkoii_vision
+source ~/ros2_ws/install/setup.bash
+```
+
+#### 起動コマンド（用途に合わせて実行）
+* **ブロック認識**：`ros2 run kakkoii_vision block_detector`
+* **色識別**：`ros2 run kakkoii_vision color_detector`
+* **手の追跡（MediaPipe）**：`ros2 run kakkoii_vision mediapipe_tracker`
+
 ## 使用方法
 
 ### Gazeboで実行する場合
