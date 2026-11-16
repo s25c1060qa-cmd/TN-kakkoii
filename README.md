@@ -89,16 +89,17 @@ colcon build --packages-select kakkoii_ros
 source ~/ros2_ws/install/setup.bash
 ```
 
-### 3. MediaPipeのインストール
+### 3. 画像処理に必要なライブラリ・フォントのインストール
 
-Ubuntu 24.04ではシステムのPythonに直接pipでインストールできないため、仮想環境（venv）を使います。
+`ros2 run` から各プログラムを直接起動できるよう、以下の2つをインストールします（ターミナルのどのフォルダにいても実行できます）。
+
+* **日本語表示用フォント・画像処理ツール**（`python3-pil` / `fonts-noto-cjk`）：カメラ映像に「赤」「青」「ロック完了」などの日本語を表示するために使用します。
+* **MediaPipe と NumPy**（バージョン指定）：最新のバージョンではエラーになるため、動作が確認できているバージョンを指定して導入します。
 
 ```bash
-sudo apt install python3-pip python3-venv
-cd ~/ros2_ws
-python3 -m venv env --system-site-packages   # ROS 2のrclpyを使えるようにする
-source env/bin/activate
-pip install mediapipe opencv-python
+sudo apt update
+sudo apt install -y python3-pil fonts-noto-cjk
+pip install "mediapipe<0.10.30" "numpy<2" --break-system-packages
 ```
 
 ## 使用方法
