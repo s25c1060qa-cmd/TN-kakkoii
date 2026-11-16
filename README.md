@@ -212,6 +212,8 @@ TN-kakkoii/
 
 ## ライセンス
 
-- このパッケージのアーム制御プログラムは、株式会社アールティが Apache License 2.0 で公開している [crane_x7_examples](https://github.com/rt-net/crane_x7_ros/tree/ros2/crane_x7_examples) のサンプルコードを改変して作成しています。
-- このリポジトリ自体のライセンスは決定後に記載します（過去の班はApache License 2.0で公開し、LICENSEファイルを置いています）。
-- © 2026 竹口昊汰, 山崎大成, 米澤慧師, 渡辺蓮
+© 2026 竹口昊汰, 山崎大成, 米澤慧師, 渡辺蓮
+
+このリポジトリは [Apache License 2.0](./LICENSE) のもとで公開されています。
+
+本リポジトリは RT Corporation の [crane_x7_ros](https://github.com/rt-net/crane_x7_ros) / crane_x7_examples を改変したコードを含みます（Copyright 2020 RT Corporation, Apache License 2.0）。
