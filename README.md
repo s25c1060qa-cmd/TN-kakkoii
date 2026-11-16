@@ -27,20 +27,27 @@ CRANE-X7とMediaPipeを連携させ、人間の手の位置・侵入方向に応
 
 ## システム構成
 
+役割ごとに 4 つの ROS 2 パッケージに分けています。パッケージどうしはトピックだけでつながっているので、1 つを差し替えても他はそのまま使えます。
+
 ```
-┌──────────────┐  画像   ┌────────────────────────┐  /target_point   ┌─────────────────────┐
-│ カメラ       │ ──────▶ │ media_publisher.py     │ ───────────────▶ │ kakkoii (C++)       │
-│ (Webカメラ / │         │ MediaPipe・OpenCV      │ geometry_msgs/   │ MoveIt 2で軌道計画  │
-│  RealSense)  │         │ 指先座標を抽出         │ Point            │ → CRANE-X7を制御    │
-└──────────────┘         └────────────────────────┘                  └─────────────────────┘
+┌────────────┐ 画像 ┌──────────────────────┐ /target_point ┌──────────────────┐ /place_target ┌──────────────────┐
+│ カメラ     │ ───▶ │ kakkoii_hand_detector│ ────────────▶ │ kakkoii_decision │ ────────────▶ │ kakkoii_arm      │
+│ (Webカメラ │      │ MediaPipeで指先検出  │ 画像上の座標  │ 置く位置を決める │ 置く位置 [m]  │ MoveIt 2で       │
+│ /RealSense)│      │                      │ (0.0〜1.0)    │                  │               │ ピック＆プレース │
+└────────────┘      └──────────────────────┘               └──────────────────┘               └──────────────────┘
 ```
 
-| ノード | ファイル | 役割 |
+| パッケージ | ノード | 役割 | 詳細 |
+|---|---|---|---|
+| `kakkoii_hand_detector` | `hand_detector` | カメラ映像から人差し指先端を検出し `/target_point` に送信 | [README](./kakkoii_hand_detector/README.md) |
+| `kakkoii_decision` | `decision` | 手の位置から置く位置を決めて `/place_target` に送信 | [README](./kakkoii_decision/README.md) |
+| `kakkoii_arm` | `pick_and_place` | `/place_target` を受け取り、ブロックをつかんでそこへ置く | [README](./kakkoii_arm/README.md) |
+| `kakkoii_bringup` | － | arm と decision をまとめて起動する launch と設定 yaml | [README](./kakkoii_bringup/README.md) |
+
+| トピック | 型 | 内容 |
 |---|---|---|
-| `mediapipe_test_publisher` | `media_publisher.py` | カメラ映像から人差し指先端（ランドマーク8）を検出し、`/target_point` に送信 |
-| `pick_and_place` | `kakkoii_ros/scripts/kakkoii.cpp` | `/target_point` を受信し、手の位置に応じた場所へブロックを移動 |
-
-`/target_point`（`geometry_msgs/msg/Point`）の `x`, `y` は画像内の正規化座標（0.0〜1.0、左上が原点）です。
+| `/target_point` | `geometry_msgs/msg/Point` | 手の位置。`x`, `y` は画像内の正規化座標（0.0〜1.0、左上が原点） |
+| `/place_target` | `geometry_msgs/msg/Point` | ブロックを置く位置。`x`, `y` [m]（ロボット基準） |
 
 ## 動作環境
 
@@ -85,7 +92,7 @@ cd ~/ros2_ws/src
 git clone https://github.com/s25c1060qa-cmd/TN-kakkoii.git
 
 cd ~/ros2_ws
-colcon build --packages-select kakkoii_ros
+colcon build --symlink-install --packages-up-to kakkoii_bringup kakkoii_hand_detector
 source ~/ros2_ws/install/setup.bash
 ```
 
@@ -99,7 +106,7 @@ source ~/ros2_ws/install/setup.bash
 ```bash
 sudo apt update
 sudo apt install -y python3-pil fonts-noto-cjk
-pip install "mediapipe<0.10.30" "numpy<2" --break-system-packages
+pip install "mediapipe<0.10.30" "numpy<2" "opencv-contrib-python<4.11" --break-system-packages
 ```
 
 ## 使用方法
@@ -111,19 +118,20 @@ pip install "mediapipe<0.10.30" "numpy<2" --break-system-packages
   source ~/ros2_ws/install/setup.bash
   ros2 launch crane_x7_gazebo crane_x7_with_table.launch.py
   ```
-- **ターミナル2（手の認識）**
+- **ターミナル2（アーム制御＋置き位置の判断）**
   ```bash
   source ~/ros2_ws/install/setup.bash
-  source ~/ros2_ws/env/bin/activate
-  python3 ~/ros2_ws/src/TN-kakkoii/media_publisher.py
+  ros2 launch kakkoii_bringup kakkoii.launch.py use_sim_time:=true
   ```
-- **ターミナル3（アーム制御）**
+  `Waiting for new place target...` と出たら準備完了です。
+- **ターミナル3（手の認識）**
   ```bash
   source ~/ros2_ws/install/setup.bash
-  ros2 launch kakkoii_ros kakkoii.launch.py use_sim_time:='true'
+  ros2 run kakkoii_hand_detector hand_detector
   ```
 
 カメラのウィンドウ上で `q` を押すと手の認識ノードが終了します。
+MediaPipe を venv に入れている場合は、venv を有効にしてから `python3 -m kakkoii_hand_detector.hand_detector_node` で起動してください（`ros2 run` では venv の MediaPipe が見つかりません）。
 
 ### 実機で実行する場合
 
@@ -135,11 +143,20 @@ pip install "mediapipe<0.10.30" "numpy<2" --break-system-packages
   ```bash
   ros2 launch crane_x7_examples demo.launch.py port_name:=/dev/ttyUSB0
   ```
-- **ターミナル2・3** はGazeboの場合と同じです（ターミナル3の `use_sim_time:='true'` は外してください）。
+- **ターミナル2・3** はGazeboの場合と同じです（ターミナル2の `use_sim_time:=true` は外してください）。
+
+### カメラなしで動作確認する場合
+
+ターミナル3の代わりに、手の位置を手で送れます（例：右上に手がある）。
+
+```bash
+ros2 topic pub --once /target_point geometry_msgs/msg/Point "{x: 0.9, y: 0.1, z: 0.0}"
+```
 
 ## 動作の詳細
 
-アームは毎回、ピック位置（x=0.25, y=0.0 [m]）の上空で待機し、`/target_point` を受信するとブロックを掴んで、**手の位置と反対側**（手から遠ざける方向）に置きます。
+アームは毎回、ピック位置（x=0.25, y=0.0 [m]）の上空で待機し、`/place_target` を受信するとブロックを掴んで、その位置に置きます。
+置く位置は kakkoii_decision が **手の位置と反対側**（手から遠ざける方向）になるよう決めます。
 
 | 手を検出した領域（画像上） | ブロックを置く位置 (x, y) [m] |
 |---|---|
@@ -152,22 +169,42 @@ pip install "mediapipe<0.10.30" "numpy<2" --break-system-packages
 | 右中央 | (0.25, 0.13) |
 | 右上 | (0.15, 0.13) |
 
-画像を横・縦それぞれ3等分（0.33 / 0.66）して領域を判定しています（中央列のみ上下2分割）。置き場所を変える場合は `kakkoii.cpp` の分岐部分を編集してください。
+画像を横・縦それぞれ3等分（0.33 / 0.66）して領域を判定しています（中央列のみ上下2分割）。
+ピック位置・置く位置は [`kakkoii_bringup/config/kakkoii.yaml`](./kakkoii_bringup/config/kakkoii.yaml) で変更できます（コードの修正は不要）。
 
 ## ディレクトリ構成
 
 ```
 TN-kakkoii/
 ├── README.md
-├── how_to_start.md          # 班員用の起動手順メモ
-├── media_publisher.py       # MediaPipeによる手の認識ノード
-└── kakkoii_ros/             # アーム制御用ROS 2パッケージ
-    ├── CMakeLists.txt
-    ├── package.xml
-    ├── launch/
-    │   └── kakkoii.launch.py
-    └── scripts/
-        └── kakkoii.cpp
+├── LICENSE
+├── how_to_start.md                  # 班員用の起動手順メモ
+├── kakkoii_hand_detector/           # 手の認識（Python）
+│   ├── kakkoii_hand_detector/hand_detector_node.py
+│   ├── package.xml / setup.py / setup.cfg
+│   ├── README.md
+│   └── LICENSE
+├── kakkoii_decision/                # 置く位置の判断（Python）
+│   ├── kakkoii_decision/
+│   │   ├── decision_node.py         # ROS 2ノード
+│   │   └── region.py                # 判断ロジック（ROSに依存しない）
+│   ├── test/test_region.py
+│   ├── package.xml / setup.py / setup.cfg
+│   ├── README.md
+│   └── LICENSE
+├── kakkoii_arm/                     # ピック＆プレース（C++）
+│   ├── src/pick_and_place_node.cpp
+│   ├── launch/pick_and_place.launch.py
+│   ├── config/pick_and_place.yaml
+│   ├── CMakeLists.txt / package.xml
+│   ├── README.md
+│   └── LICENSE
+└── kakkoii_bringup/                 # まとめて起動
+    ├── launch/kakkoii.launch.py
+    ├── config/kakkoii.yaml
+    ├── CMakeLists.txt / package.xml
+    ├── README.md
+    └── LICENSE
 ```
 
 ## 開発状況
@@ -207,7 +244,7 @@ TN-kakkoii/
 
 ## 参考
 
-- [rt-net/crane_x7_ros](https://github.com/rt-net/crane_x7_ros/tree/ros2)（`crane_x7_examples` の `pick_and_place.cpp` を参考にアーム制御を作成）
+- [rt-net/crane_x7_ros](https://github.com/rt-net/crane_x7_ros/tree/ros2)（`crane_x7_examples` の `pick_and_place.cpp` を元に kakkoii_arm を作成）
 - S・N班 色付きブロック仕分けロボット（色識別の参考）
 - [cigarette_dispenser_robot](https://github.com/2025-RobotDesign3-YFK/cigarette_dispenser_robot)（MediaPipeとCRANE-X7の連携の参考）
 

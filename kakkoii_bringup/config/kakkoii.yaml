@@ -1,0 +1,30 @@
+# チーム全体の設定。ここを書き換えれば、コードを触らずに動きを調整できる（単位は m）
+
+# kakkoii_arm：ピック＆プレース
+pick_and_place:
+  ros__parameters:
+    input_topic: /place_target
+    lifting_height: 0.3
+    pick_x: 0.25
+    pick_y: 0.0
+    pick_z: 0.12
+    place_z: 0.13
+
+# kakkoii_decision：手の位置 → 置く位置
+decision:
+  ros__parameters:
+    input_topic: /target_point
+    output_topic: /place_target
+    low: 0.33            # 画像を 3 等分する境界
+    high: 0.66
+    center_split: 0.5    # 中央列の上下の境界
+    fallback: [0.25, 0.0]
+    place:               # 手を検出した領域: [置く x, 置く y]（手と反対側）
+      left_bottom: [0.35, -0.13]
+      left_middle: [0.25, -0.15]
+      left_top: [0.15, -0.13]
+      center_bottom: [0.35, 0.0]
+      center_top: [0.15, 0.0]
+      right_bottom: [0.35, 0.13]
+      right_middle: [0.25, 0.13]
+      right_top: [0.15, 0.13]
