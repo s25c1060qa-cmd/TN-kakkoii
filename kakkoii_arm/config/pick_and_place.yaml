@@ -1,0 +1,9 @@
+# kakkoii_arm の既定パラメータ（単位は m）
+pick_and_place:
+  ros__parameters:
+    input_topic: /place_target
+    lifting_height: 0.3   # つかむ前・置いた後に上げる高さ
+    pick_x: 0.25          # ブロックをつかむ位置
+    pick_y: 0.0
+    pick_z: 0.12
+    place_z: 0.13         # ブロックを置く高さ

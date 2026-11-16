@@ -1,0 +1,17 @@
+<?xml version="1.0"?>
+<?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<package format="3">
+  <name>kakkoii_hand_detector</name>
+  <version>0.1.0</version>
+  <description>MediaPipe Hands でカメラ映像から人差し指の先端を検出し、画像上の座標を配信するノード</description>
+  <maintainer email="kakkoii@todo.todo">TN-kakkoii</maintainer>
+  <license>Apache-2.0</license>
+
+  <exec_depend>rclpy</exec_depend>
+  <exec_depend>geometry_msgs</exec_depend>
+  <!-- mediapipe と opencv-python は pip（venv）で入れる。README 参照 -->
+
+  <export>
+    <build_type>ament_python</build_type>
+  </export>
+</package>
