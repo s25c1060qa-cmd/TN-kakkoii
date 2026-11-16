@@ -105,7 +105,7 @@ sudo apt install python3-pip python3-venv
 cd ~/ros2_ws
 python3 -m venv env --system-site-packages   # ROS 2のrclpyを使えるようにする
 source env/bin/activate
-pip install mediapipe opencv-python
+pip install --ignore-installed "numpy<2" "mediapipe<0.10.30" "opencv-python<4.11" "opencv-contrib-python<4.11" matplotlib
 ```
 
 ## 使用方法

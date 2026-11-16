@@ -33,7 +33,7 @@ MediaPipe と OpenCV は pip で入れます。Ubuntu 24.04 ではシステム�
 cd ~/ros2_ws
 python3 -m venv env --system-site-packages
 source env/bin/activate
-pip install mediapipe opencv-python
+pip install --ignore-installed "numpy<2" "mediapipe<0.10.30" "opencv-python<4.11" "opencv-contrib-python<4.11" matplotlib
 ```
 
 ## 起動例
