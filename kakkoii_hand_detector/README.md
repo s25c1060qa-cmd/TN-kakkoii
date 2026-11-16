@@ -27,29 +27,31 @@ CRANE-X7 には依存しないので、手の位置を使う他のロボット�
 
 ## 依存
 
-MediaPipe と OpenCV は pip で入れます。Ubuntu 24.04 ではシステムの Python に直接入れられないため、venv を使います。
+MediaPipe・NumPy・OpenCV はバージョンを指定して入れます（最新版の組み合わせではエラーになります）。
 
 ```bash
-cd ~/ros2_ws
-python3 -m venv env --system-site-packages
-source env/bin/activate
-pip install --ignore-installed "numpy<2" "mediapipe<0.10.30" "opencv-python<4.11" "opencv-contrib-python<4.11" matplotlib
+pip install "mediapipe<0.10.30" "numpy<2" "opencv-contrib-python<4.11" --break-system-packages
 ```
 
 ## 起動例
 
-venv の MediaPipe を使うため、`ros2 run` ではなく `python3 -m` で起動します。
+```bash
+source ~/ros2_ws/install/setup.bash
+ros2 run kakkoii_hand_detector hand_detector
+
+# カメラ番号を変える場合
+ros2 run kakkoii_hand_detector hand_detector --ros-args -p camera_index:=2
+```
+
+カメラのウィンドウで `q` を押すと終了します。
+
+MediaPipe を venv に入れている場合は、`ros2 run` では venv の MediaPipe が見つからないため、次のように起動します。
 
 ```bash
 source ~/ros2_ws/install/setup.bash
 source ~/ros2_ws/env/bin/activate
 python3 -m kakkoii_hand_detector.hand_detector_node
-
-# カメラ番号を変える場合
-python3 -m kakkoii_hand_detector.hand_detector_node --ros-args -p camera_index:=2
 ```
-
-カメラのウィンドウで `q` を押すと終了します。
 
 ## ライセンス
 

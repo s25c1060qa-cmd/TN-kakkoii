@@ -96,16 +96,17 @@ colcon build --symlink-install --packages-up-to kakkoii_bringup kakkoii_hand_det
 source ~/ros2_ws/install/setup.bash
 ```
 
-### 3. MediaPipeのインストール
+### 3. 画像処理に必要なライブラリ・フォントのインストール
 
-Ubuntu 24.04ではシステムのPythonに直接pipでインストールできないため、仮想環境（venv）を使います。
+`ros2 run` から各プログラムを直接起動できるよう、以下の2つをインストールします（ターミナルのどのフォルダにいても実行できます）。
+
+* **日本語表示用フォント・画像処理ツール**（`python3-pil` / `fonts-noto-cjk`）：カメラ映像に「赤」「青」「ロック完了」などの日本語を表示するために使用します。
+* **MediaPipe と NumPy**（バージョン指定）：最新のバージョンではエラーになるため、動作が確認できているバージョンを指定して導入します。
 
 ```bash
-sudo apt install python3-pip python3-venv
-cd ~/ros2_ws
-python3 -m venv env --system-site-packages   # ROS 2のrclpyを使えるようにする
-source env/bin/activate
-pip install --ignore-installed "numpy<2" "mediapipe<0.10.30" "opencv-python<4.11" "opencv-contrib-python<4.11" matplotlib
+sudo apt update
+sudo apt install -y python3-pil fonts-noto-cjk
+pip install "mediapipe<0.10.30" "numpy<2" "opencv-contrib-python<4.11" --break-system-packages
 ```
 
 ## 使用方法
@@ -126,12 +127,11 @@ pip install --ignore-installed "numpy<2" "mediapipe<0.10.30" "opencv-python<4.11
 - **ターミナル3（手の認識）**
   ```bash
   source ~/ros2_ws/install/setup.bash
-  source ~/ros2_ws/env/bin/activate
-  python3 -m kakkoii_hand_detector.hand_detector_node
+  ros2 run kakkoii_hand_detector hand_detector
   ```
 
 カメラのウィンドウ上で `q` を押すと手の認識ノードが終了します。
-手の認識は venv の MediaPipe を使うため、`ros2 run` ではなく `python3 -m` で起動します。
+MediaPipe を venv に入れている場合は、venv を有効にしてから `python3 -m kakkoii_hand_detector.hand_detector_node` で起動してください（`ros2 run` では venv の MediaPipe が見つかりません）。
 
 ### 実機で実行する場合
 

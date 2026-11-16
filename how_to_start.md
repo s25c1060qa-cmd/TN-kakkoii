@@ -29,8 +29,7 @@ ros2 launch kakkoii_bringup kakkoii.launch.py use_sim_time:=true
 - ターミナル3（手の認識）
 ```
 source ~/ros2_ws/install/setup.bash
-source ~/ros2_ws/env/bin/activate
-python3 -m kakkoii_hand_detector.hand_detector_node
+ros2 run kakkoii_hand_detector hand_detector
 ```
 
 ## 担当ごとに触るパッケージ
