@@ -29,12 +29,15 @@ CRANE-X7とMediaPipeを連携させ、人間の手の位置・侵入方向に応
 
 役割ごとに 4 つの ROS 2 パッケージに分けています。パッケージどうしはトピックだけでつながっているので、1 つを差し替えても他はそのまま使えます。
 
-```
-┌────────────┐ 画像 ┌──────────────────────┐ /target_point ┌──────────────────┐ /place_target ┌──────────────────┐
-│ カメラ     │ ───▶ │ kakkoii_hand_detector│ ────────────▶ │ kakkoii_decision │ ────────────▶ │ kakkoii_arm      │
-│ (Webカメラ │      │ MediaPipeで指先検出  │ 画像上の座標  │ 置く位置を決める │ 置く位置 [m]  │ MoveIt 2で       │
-│ /RealSense)│      │                      │ (0.0〜1.0)    │                  │               │ ピック＆プレース │
-└────────────┘      └──────────────────────┘               └──────────────────┘               └──────────────────┘
+```mermaid
+flowchart LR
+    cam["カメラ<br>(Webカメラ / RealSense)"]
+    hd["kakkoii_hand_detector<br>MediaPipeで指先検出"]
+    dec["kakkoii_decision<br>置く位置を決める"]
+    arm["kakkoii_arm<br>MoveIt 2でピック＆プレース"]
+    cam -- 画像 --> hd
+    hd -- "/target_point<br>画像上の座標 (0.0〜1.0)" --> dec
+    dec -- "/place_target<br>置く位置 [m]" --> arm
 ```
 
 | パッケージ | ノード | 役割 | 詳細 |
