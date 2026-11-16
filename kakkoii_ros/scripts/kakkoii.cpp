@@ -1,4 +1,3 @@
-//こんにちわんこそば
 #include <cmath>
 #include <thread>
 #include <atomic>
@@ -225,7 +224,7 @@ int main(int argc, char ** argv)
     // プレース位置の設定
     const double PLACE_X = place_x;
     const double PLACE_Y = place_y;
-    const double PLACE_Z = 0.30;
+    const double PLACE_Z = 0.13;
     const double PLACE_ROLL = -180.0;
     const double PLACE_PITCH = 0.0;
     const double PLACE_YAW = -90.0; // 定義
