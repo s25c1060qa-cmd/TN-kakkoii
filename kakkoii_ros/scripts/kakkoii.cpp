@@ -1,3 +1,4 @@
+//こんにちわんこそば
 #include <cmath>
 #include <thread>
 #include <atomic>
