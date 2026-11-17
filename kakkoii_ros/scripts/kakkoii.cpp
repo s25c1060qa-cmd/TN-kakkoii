@@ -166,7 +166,7 @@ int main(int argc, char ** argv)
   const double PICK_Z = 0.12;
   const double PICK_ROLL = -180.0;
   const double PICK_PITCH = 0.0;
-  const double PICK_YAW = -90.0;
+  const double PICK_YAW = 90.0;
 
   // 初期化動作
   controller.move_arm_to_named_pose("home");
@@ -200,7 +200,7 @@ int main(int argc, char ** argv)
       place_y = -0.13; //左下を検知し、右上に移動
     } else if(x_value < 0.33 && (0.33 < y_value && y_value  < 0.66)) {
       place_x = 0.25;
-      place_y = -0.15; //左真ん中を検知し、右に移動
+      place_y = -0.12; //左真ん中を検知し、右に移動
     } else if(x_value < 0.33 && y_value < 0.33) {
       place_x = 0.15;
       place_y = -0.13; //左上を検知し、右上に移動
@@ -227,7 +227,7 @@ int main(int argc, char ** argv)
     const double PLACE_Z = 0.13;
     const double PLACE_ROLL = -180.0;
     const double PLACE_PITCH = 0.0;
-    const double PLACE_YAW = -90.0; // 定義
+    const double PLACE_YAW = 90.0; // 定義
 
     // 4. ピック動作（掴みに行く）
     controller.control_arm(PICK_X, PICK_Y, PICK_Z, PICK_ROLL, PICK_PITCH, PICK_YAW);
