@@ -14,6 +14,7 @@ using MoveGroupInterface = moveit::planning_interface::MoveGroupInterface;
 class PickAndPlace
 {
 public:
+  
   // グリッパの開閉角度
   inline static const double GRIPPER_OPEN = angles::from_degrees(60.0);
   inline static const double GRIPPER_GRASP = angles::from_degrees(20.0);
@@ -33,7 +34,7 @@ public:
     subscription_ = node_->create_subscription<geometry_msgs::msg::Point>(
       "/target_point", 10,
       std::bind(&PickAndPlace::command_callback, this, std::placeholders::_1));
-    
+
     RCLCPP_INFO(node_->get_logger(), "Ready! Waiting for /target_point data...");
   }
 
@@ -125,6 +126,47 @@ public:
   {
     command_received_ = false;
   }
+//座標の番号を指定して持ち上げる関数。（真ん中が０で上から時計回りに１〜８,上空0、掴む1)
+  void move_place(int n,int h){
+    double x = 0.25;
+    double y = 0.0;
+    if(n==0){
+      x = 0.25;
+      y = 0;
+    }else if(n==1){
+      x = 0.35;
+      y = -0.13;
+    }else if(n==2){
+      x = 0.15;
+      y = 0.13;
+    }else if(n==3){
+      x = 0.25;
+      y = -0.13;
+    }else if(n==4){
+      x = 0.15;
+      y = -0.13;
+    }else if(n==5){
+      x = 0.15;
+      y = 0.00;
+    }else if(n==6){
+      x = 0.15;
+      y = 0.13;
+    }else if(n==7){
+      x = 0.15;
+      y = 0.13;
+    }else if(n==8){
+      x = 0.35;
+      y = 0.00;
+    }else{
+      x = 0.25;
+      y = 0.00;
+    }
+    if(h == 0){
+      control_arm(x,y,0.30,-180.0,0,-90.0);//ここで監視する高さを設定
+    }else{
+      control_arm(x,y,0.12,-180.0,0,-90.0);//ここで掴む高さを設定
+    }
+  }
 
 private:
   void command_callback(const geometry_msgs::msg::Point::SharedPtr msg)
@@ -143,8 +185,9 @@ private:
   std::atomic<double> received_y_;
   std::atomic<bool> command_received_;
 };
+
 //検知した座標によって番号を返す関数。(真ん中上から時計回りに、1,2,3,4,5,6,7,8)
- int fing_place(double x, double y){
+int fing_place(double x, double y){
   double nx = x -0.5;
   double ny = -(y -0.5);
 //ラジアンで取得
@@ -169,7 +212,8 @@ private:
   }else{
     return 7;
   }
- }
+}
+
 
 int main(int argc, char ** argv)
 {
@@ -180,7 +224,6 @@ int main(int argc, char ** argv)
 
   // MoveGroupInterfaceのデッドロックを防ぐため、スピン処理を別スレッドで走らせる
   std::thread spin_thread([node]() { rclcpp::spin(node); });
-
   PickAndPlace controller(node);
 
   // アプローチ・退避時の高さ
@@ -189,7 +232,7 @@ int main(int argc, char ** argv)
   // 掴む位置（ピック位置）のXYZ[m]とRPY[deg]
   const double PICK_X = 0.25;
   const double PICK_Y = 0.0;
-  const double PICK_Z = 0.12;
+  //const double PICK_Z = 0.12;
   const double PICK_ROLL = -180.0;
   const double PICK_PITCH = 0.0;
   const double PICK_YAW = -90.0;
@@ -217,71 +260,57 @@ int main(int argc, char ** argv)
 
     // 3. 受け取ったx軸の値を判定
     double x_value = controller.get_received_x();
-    double place_y = 0.0; // デフォルト
     double y_value = controller.get_received_y();
-    double place_x = 0.25;
-
+    int place = 0;
   if (fing_place(x_value,y_value)==6){
-      place_x = 0.35;
-      place_y = -0.13; //左下を検知し、右上に移動
+      place = 2;
       RCLCPP_INFO(node->get_logger(),"左下");
     } else if(fing_place(x_value,y_value)==7) {
-      place_x = 0.25;
-      place_y = -0.12; //左真ん中を検知し、右に移動
+      place = 3;
       RCLCPP_INFO(node->get_logger(),"左");
     } else if(fing_place(x_value,y_value) == 8) {
-      place_x = 0.15;
-      place_y = -0.13; //左上を検知し、右上に移動
+      place = 4;
       RCLCPP_INFO(node->get_logger(),"左上");
     } else if(fing_place(x_value,y_value)==5 ) {
-      place_x = 0.35;
-      place_y = 0.00; //下を検知し、上に移動
+      place = 1;
       RCLCPP_INFO(node->get_logger(),"下");
     } else if(fing_place(x_value,y_value) == 1) {
-      place_x = 0.15;
-      place_y = 0.00; //上を検知し、下に移動
+      place = 5;
       RCLCPP_INFO(node->get_logger(),"上");
     } else if(fing_place(x_value,y_value)==4) {
-      place_x = 0.35;
-      place_y = 0.13; //右下を検知し、左上に移動
+      place = 8;
       RCLCPP_INFO(node->get_logger(),"右下");
     } else if(fing_place(x_value,y_value)==3) {
-      place_x = 0.25;
-      place_y = 0.13; //右真ん中を検知し、左に移動
+      place = 7;
       RCLCPP_INFO(node->get_logger(),"右");
     } else if(fing_place(x_value,y_value)==2) {
-      place_x = 0.15;
-      place_y = 0.13; //右上を検知し、左上に移動
+      place = 6;
       RCLCPP_INFO(node->get_logger(),"右上");
     }
 
     // プレース位置の設定
-    const double PLACE_X = place_x;
+    /*const double PLACE_X = place_x;
     const double PLACE_Y = place_y;
     const double PLACE_Z = 0.13;
     const double PLACE_ROLL = -180.0;
     const double PLACE_PITCH = 0.0;
-    const double PLACE_YAW = -90.0; // 定義
+    const double PLACE_YAW = -90.0; // 定義*/
 
     // 4. ピック動作（掴みに行く）
-    controller.control_arm(PICK_X, PICK_Y, PICK_Z, PICK_ROLL, PICK_PITCH, PICK_YAW);
+    controller.move_place(0,1);
     controller.move_gripper_angle(PickAndPlace::GRIPPER_GRASP);
-    controller.control_arm(PICK_X, PICK_Y, LIFTING_HEIGHT, PICK_ROLL, PICK_PITCH, PICK_YAW);
+    controller.move_place(0,0);
 
     // 5. プレース動作（指定された左右の位置へ移動して置く - PLACE_YAWを使用）
-    controller.control_arm(PLACE_X, PLACE_Y, LIFTING_HEIGHT, PLACE_ROLL, PLACE_PITCH, PLACE_YAW);
-    controller.control_arm(PLACE_X, PLACE_Y, PLACE_Z, PLACE_ROLL, PLACE_PITCH, PLACE_YAW);
+    controller.move_place(place,0);
+    controller.move_place(place,1);
     controller.move_gripper_angle(PickAndPlace::GRIPPER_OPEN);
-    controller.control_arm(PLACE_X, PLACE_Y, LIFTING_HEIGHT, PLACE_ROLL, PLACE_PITCH, PLACE_YAW);
-
-    // 6. ホームに戻る
-    //controller.move_arm_to_named_pose("home");
-    //controller.move_gripper_angle(PickAndPlace::GRIPPER_OPEN);
+    controller.move_place(place,0);
   }
 
   // 終了動作
   controller.clear_constraints();
-  
+
   rclcpp::shutdown();
   spin_thread.join();
   return 0;
