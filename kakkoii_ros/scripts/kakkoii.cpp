@@ -130,34 +130,34 @@ public:
   void move_place(int n,int h){
     double x = 0.25;
     double y = 0.0;
-    if(n==0){
+    if(n==0){//真ん中
       x = 0.25;
-      y = 0;
-    }else if(n==1){
+      y = -0;
+    }else if(n==1){//上
+      x = 0.35;
+      y = 0.0;
+    }else if(n==2){//右上
       x = 0.35;
       y = -0.13;
-    }else if(n==2){
-      x = 0.15;
-      y = 0.13;
-    }else if(n==3){
+    }else if(n==3){//右
       x = 0.25;
       y = -0.13;
-    }else if(n==4){
+    }else if(n==4){//右下
       x = 0.15;
       y = -0.13;
-    }else if(n==5){
+    }else if(n==5){//下
       x = 0.15;
       y = 0.00;
-    }else if(n==6){
+    }else if(n==6){//左下
       x = 0.15;
       y = 0.13;
-    }else if(n==7){
-      x = 0.15;
+    }else if(n==7){//左
+      x = 0.25;
       y = 0.13;
-    }else if(n==8){
+    }else if(n==8){//左上
       x = 0.35;
-      y = 0.00;
-    }else{
+      y = 0.13;
+    }else{//真ん中
       x = 0.25;
       y = 0.00;
     }
