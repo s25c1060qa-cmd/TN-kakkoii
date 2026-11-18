@@ -132,7 +132,6 @@ private:
     received_x_ = msg->x;
     received_y_ = msg->y;
     command_received_ = true;
-    RCLCPP_INFO(node_->get_logger(), "Received target_point -> x: %.4f, y: %.4f, z: %.4f", msg->x, msg->y, msg->z);
   }
 
   rclcpp::Node::SharedPtr node_;
@@ -144,6 +143,33 @@ private:
   std::atomic<double> received_y_;
   std::atomic<bool> command_received_;
 };
+//検知した座標によって番号を返す関数。(真ん中上から時計回りに、1,2,3,4,5,6,7,8)
+ int fing_place(double x, double y){
+  double nx = x -0.5;
+  double ny = -(y -0.5);
+//ラジアンで取得
+  double rad = std::atan2(ny,nx);
+//度数法で取得
+  double deg = rad * 180.0 / 3.141592;
+//条件分岐
+  if(67.5 <= deg && deg <112.5){
+    return 1;
+  }else if(22.5 <= deg && deg <67.5){
+    return 2;
+  }else if(-22.5 <= deg && deg < 22.5){
+    return 3;
+  }else if(-67.5 <= deg && deg < -22.5){
+    return 4;
+  }else if(-112.5 <= deg && deg < -67.5){
+    return 5;
+  }else if(-157.5 <= deg && deg < -112.5){
+    return 6;
+  }else if(112.5 <= deg && deg <157.5){
+    return 8;
+  }else{
+    return 7;
+  }
+ }
 
 int main(int argc, char ** argv)
 {
@@ -195,30 +221,38 @@ int main(int argc, char ** argv)
     double y_value = controller.get_received_y();
     double place_x = 0.25;
 
-    if (x_value < 0.33 && 0.66 < y_value) {
+  if (fing_place(x_value,y_value)==6){
       place_x = 0.35;
       place_y = -0.13; //左下を検知し、右上に移動
-    } else if(x_value < 0.33 && (0.33 < y_value && y_value  < 0.66)) {
+      RCLCPP_INFO(node->get_logger(),"左下");
+    } else if(fing_place(x_value,y_value)==7) {
       place_x = 0.25;
-      place_y = -0.15; //左真ん中を検知し、右に移動
-    } else if(x_value < 0.33 && y_value < 0.33) {
+      place_y = -0.12; //左真ん中を検知し、右に移動
+      RCLCPP_INFO(node->get_logger(),"左");
+    } else if(fing_place(x_value,y_value) == 8) {
       place_x = 0.15;
       place_y = -0.13; //左上を検知し、右上に移動
-    } else if((0.33 < x_value && x_value <0.66) && 0.5 < y_value ) {
+      RCLCPP_INFO(node->get_logger(),"左上");
+    } else if(fing_place(x_value,y_value)==5 ) {
       place_x = 0.35;
       place_y = 0.00; //下を検知し、上に移動
-    } else if((0.33 < x_value && x_value <0.66) && y_value < 0.5) {
+      RCLCPP_INFO(node->get_logger(),"下");
+    } else if(fing_place(x_value,y_value) == 1) {
       place_x = 0.15;
       place_y = 0.00; //上を検知し、下に移動
-    } else if(0.66 < x_value && 0.66 < y_value) {
+      RCLCPP_INFO(node->get_logger(),"上");
+    } else if(fing_place(x_value,y_value)==4) {
       place_x = 0.35;
       place_y = 0.13; //右下を検知し、左上に移動
-    } else if(0.66 < x_value && (0.33 < y_value && y_value < 0.66)) {
+      RCLCPP_INFO(node->get_logger(),"右下");
+    } else if(fing_place(x_value,y_value)==3) {
       place_x = 0.25;
       place_y = 0.13; //右真ん中を検知し、左に移動
-    } else if(0.66 < x_value && y_value < 0.33) {
+      RCLCPP_INFO(node->get_logger(),"右");
+    } else if(fing_place(x_value,y_value)==2) {
       place_x = 0.15;
       place_y = 0.13; //右上を検知し、左上に移動
+      RCLCPP_INFO(node->get_logger(),"右上");
     }
 
     // プレース位置の設定
