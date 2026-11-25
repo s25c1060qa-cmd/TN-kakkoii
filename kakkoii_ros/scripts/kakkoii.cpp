@@ -127,34 +127,34 @@ public:
     command_received_ = false;
   }
 //座標の番号を指定して持ち上げる関数。（真ん中が０で上から時計回りに１〜８,上空0、掴む1)
-  void move_place(int n,int h){
+  void move_place(int xi,int yi, int h){
     double x = 0.25;
     double y = 0.0;
-    if(n==0){//真ん中
+    if(xi==0 && yi ==0){//真ん中
       x = 0.25;
       y = -0;
-    }else if(n==1){//上
+    }else if(xi ==0 && yi ==1){//上
       x = 0.35;
       y = 0.0;
-    }else if(n==2){//右上
+    }else if(xi == 1 && yi == 1){//右上
       x = 0.35;
       y = -0.13;
-    }else if(n==3){//右
+    }else if(xi == 1 && yi == 0){//右
       x = 0.25;
-      y = -0.13;
-    }else if(n==4){//右下
+      y = -0.13; 
+    }else if(xi == 1 && yi == -1){//右下
       x = 0.15;
       y = -0.13;
-    }else if(n==5){//下
+    }else if(xi == 0 && yi == -1){//下
       x = 0.15;
       y = 0.00;
-    }else if(n==6){//左下
+    }else if(xi == -1 && yi == -1){//左下
       x = 0.15;
       y = 0.13;
-    }else if(n==7){//左
+    }else if(xi ==  -1 && yi == 0){//左
       x = 0.25;
       y = 0.13;
-    }else if(n==8){//左上
+    }else if(xi == -1 && yi == 1){//左上
       x = 0.35;
       y = 0.13;
     }else{//真ん中
@@ -228,7 +228,6 @@ int main(int argc, char ** argv)
 
   // アプローチ・退避時の高さ
   const double LIFTING_HEIGHT = 0.3;
-
   // 掴む位置（ピック位置）のXYZ[m]とRPY[deg]
   const double PICK_X = 0.25;
   const double PICK_Y = 0.0;
@@ -236,18 +235,19 @@ int main(int argc, char ** argv)
   const double PICK_ROLL = -180.0;
   const double PICK_PITCH = 0.0;
   const double PICK_YAW = -90.0;
-
+  //ロボットの移動先
+  int mx = 0;
+  int my = 0;
+  //ロボットの現在位置
+  int dx = 0;
+  int dy = 0;
   // 初期化動作
   controller.move_arm_to_named_pose("home");
   controller.move_gripper_angle(PickAndPlace::GRIPPER_OPEN);
   controller.set_constraints();
-
+  controller.control_arm(PICK_X, PICK_Y, LIFTING_HEIGHT, PICK_ROLL, PICK_PITCH, PICK_YAW);
   // 連続実行用のメインループ
   while (rclcpp::ok()) {
-    // 1. ピック位置の上空へ移動して待機状態を作る
-    controller.control_arm(PICK_X, PICK_Y, LIFTING_HEIGHT, PICK_ROLL, PICK_PITCH, PICK_YAW);
-
-    // 2. 前回の受信フラグをリセットし、新しい /target_point の入力を待機
     controller.reset_command();
     RCLCPP_INFO(node->get_logger(), "Waiting for new target point data...");
     while (rclcpp::ok() && !controller.is_command_received()) {
@@ -261,51 +261,55 @@ int main(int argc, char ** argv)
     // 3. 受け取ったx軸の値を判定
     double x_value = controller.get_received_x();
     double y_value = controller.get_received_y();
-    int place = 0;
+  
   if (fing_place(x_value,y_value)==6){
-      place = 2;
+      mx += 1; my += 1;
       RCLCPP_INFO(node->get_logger(),"左下");
     } else if(fing_place(x_value,y_value)==7) {
-      place = 3;
+      mx += 1; my+=0;
       RCLCPP_INFO(node->get_logger(),"左");
     } else if(fing_place(x_value,y_value) == 8) {
-      place = 4;
+      mx += 1;my +=-1;
       RCLCPP_INFO(node->get_logger(),"左上");
     } else if(fing_place(x_value,y_value)==5 ) {
-      place = 1;
+      mx += 0;my +=1;
       RCLCPP_INFO(node->get_logger(),"下");
     } else if(fing_place(x_value,y_value) == 1) {
-      place = 5;
+      mx += 0; my += -1;
       RCLCPP_INFO(node->get_logger(),"上");
     } else if(fing_place(x_value,y_value)==4) {
-      place = 8;
+      mx += -1; my += 1;
       RCLCPP_INFO(node->get_logger(),"右下");
     } else if(fing_place(x_value,y_value)==3) {
-      place = 7;
+      mx += -1; my += 0;
       RCLCPP_INFO(node->get_logger(),"右");
     } else if(fing_place(x_value,y_value)==2) {
-      place = 6;
+      mx += -1;my += -1;
       RCLCPP_INFO(node->get_logger(),"右上");
     }
-
-    // プレース位置の設定
-    /*const double PLACE_X = place_x;
-    const double PLACE_Y = place_y;
-    const double PLACE_Z = 0.13;
-    const double PLACE_ROLL = -180.0;
-    const double PLACE_PITCH = 0.0;
-    const double PLACE_YAW = -90.0; // 定義*/
-
+    if(mx > 1){
+      mx = -(mx -1);
+    }
+    if(mx < -1){
+      mx = -(mx +1);
+    }
+    if(my > 1){
+      my = -(my -1);
+    }
+    if(my < -1){
+      my = -(my +1);
+    }
     // 4. ピック動作（掴みに行く）
-    controller.move_place(0,1);
+    controller.move_place(dx,dy,1);
     controller.move_gripper_angle(PickAndPlace::GRIPPER_GRASP);
-    controller.move_place(0,0);
-
+    controller.move_place(dx,dy,0);
     // 5. プレース動作（指定された左右の位置へ移動して置く - PLACE_YAWを使用）
-    controller.move_place(place,0);
-    controller.move_place(place,1);
+    controller.move_place(mx,my,0);
+    controller.move_place(mx,my,1);
     controller.move_gripper_angle(PickAndPlace::GRIPPER_OPEN);
-    controller.move_place(place,0);
+    controller.move_place(mx,my,0);
+
+    dx =mx; dy =my;
   }
 
   // 終了動作
